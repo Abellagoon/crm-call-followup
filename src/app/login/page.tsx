@@ -11,6 +11,12 @@ export default function LoginPage() {
 
   return (
     <div className="login-wrap">
+      <div className="login-bg" aria-hidden="true">
+        <span className="orb orb-1" />
+        <span className="orb orb-2" />
+        <span className="orb orb-3" />
+        <span className="login-grid" />
+      </div>
       <form className="login-card" action={formAction}>
         <h1>📞 CRM ติดตามลูกค้า</h1>
         <p className="sub">เข้าสู่ระบบเพื่อเริ่มงาน</p>
