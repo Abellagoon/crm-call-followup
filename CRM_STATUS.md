@@ -4,6 +4,7 @@
 > อัปเดตล่าสุด: 2026-06-16
 
 ## 🚀 0) DEPLOY แล้ว (ใช้งานจริง 24 ชม.)
+- **GitHub repo (public): https://github.com/Abellagoon/crm-call-followup** — main + 12 branch `homework/01..12` + **12 PR merged** (ส่งงานตามกติกาครบ) · README/CONTRIBUTING/.github/PR-template ครบ · git local อยู่ที่ branch `main` (origin ไม่มี token ฝัง) · ⚠️ PAT ที่ใช้ตั้งค่าเสร็จแล้ว revoke ได้ที่ github.com/settings/tokens
 - **URL: https://homework-crm.vercel.app** (login: AD_01 — ⚠️ รหัสเปลี่ยนจาก default แล้ว 2026-06-16 เก็บไว้ส่วนตัว; reset ใหม่ได้ผ่าน DB ด้วย bcryptjs · ผู้ใช้อื่น Mg_01/agent_01-03 ยังเป็นรหัส seed เดิม)
 - โฮสต์: **Vercel** (team `abellagoons-projects`, project `homework-crm`, plan hobby) — login Vercel = `abellagoon`
   - ⚡ **function region = `syd1` (Sydney)** ตั้งใน vercel.json + project setting — ต้องอยู่โซนเดียวกับ Supabase (Sydney) ไม่งั้นช้ามาก (เคยอยู่ iad1 US → query หน้าหนึ่ง 5–7 วิ! ย้ายมา syd1 เหลือ ~1 วิ)
