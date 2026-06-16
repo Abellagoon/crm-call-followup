@@ -1,0 +1,195 @@
+// โครงสร้างฐานข้อมูล CRM โทรติดตามลูกค้า (เวอร์ชันตัวอย่าง — SQLite)
+// SQLite ไม่รองรับ enum จึงเก็บเป็น String แล้วคุมค่าใน src/lib/labels.ts
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           Int      @id @default(autoincrement())
+  username     String   @unique
+  displayName  String
+  passwordHash String
+  role         String // ADMIN | SUPERVISOR | AGENT
+  active       Boolean  @default(true)
+  createdAt    DateTime @default(now())
+
+  callLogs CallLog[]
+  contacts CampaignContact[]
+}
+
+// บทบาทผู้ใช้ — สร้าง/แก้ได้เอง พร้อมกำหนดสิทธิ์
+model Role {
+  id          Int      @id @default(autoincrement())
+  key         String   @unique // ใช้เป็นค่าใน User.role
+  name        String // ชื่อแสดงผล (เปลี่ยนได้)
+  permissions String   @default("[]") // JSON array ของ permission key
+  isSystem    Boolean  @default(false) // role พื้นฐาน ลบไม่ได้
+  createdAt   DateTime @default(now())
+}
+
+model Brand {
+  id        Int        @id @default(autoincrement())
+  name      String
+  customers Customer[]
+}
+
+model Customer {
+  id        Int      @id @default(autoincrement())
+  phone     String
+  brandId   Int
+  brand     Brand    @relation(fields: [brandId], references: [id])
+  status    String   @default("LAPSED") // ACTIVE | LAPSED | DEPOSITED | DO_NOT_CALL
+  note      String   @default("")
+  dncReason String? // เหตุผลที่ตั้งห้ามโทร (ข้อ 7) — null = ไม่ได้ห้าม
+  dncAt     DateTime? // เวลาที่ตั้งห้ามโทร
+  createdAt DateTime @default(now())
+
+  contacts CampaignContact[]
+  deposits DepositEvent[]
+  bonuses  BonusAdjustment[]
+  smsLogs  SmsLog[]
+
+  @@index([brandId])
+  @@index([phone])
+  @@index([status])
+}
+
+// ข้อ 11: คลังข้อความ SMS สำเร็จรูป (มีตัวแปร {phone} {brand})
+model SmsTemplate {
+  id        Int      @id @default(autoincrement())
+  name      String
+  body      String
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+}
+
+// ข้อ 11: ประวัติการส่ง SMS
+model SmsLog {
+  id         Int       @id @default(autoincrement())
+  customerId Int?
+  customer   Customer? @relation(fields: [customerId], references: [id])
+  phone      String
+  body       String
+  status     String // SENT | FAILED | SKIPPED
+  error      String?
+  sentById   Int?
+  sentAt     DateTime  @default(now())
+
+  @@index([customerId])
+  @@index([sentAt])
+}
+
+model Campaign {
+  id        Int               @id @default(autoincrement())
+  name      String
+  createdAt DateTime          @default(now())
+  contacts  CampaignContact[]
+}
+
+model CampaignContact {
+  id         Int      @id @default(autoincrement())
+  campaignId Int
+  campaign   Campaign @relation(fields: [campaignId], references: [id])
+  customerId Int
+  customer   Customer @relation(fields: [customerId], references: [id])
+  assigneeId Int?
+  assignee   User?    @relation(fields: [assigneeId], references: [id])
+  status     String   @default("PENDING") // PENDING | DONE
+  nextCallAt DateTime?
+  createdAt  DateTime @default(now())
+
+  callLogs CallLog[]
+
+  @@index([assigneeId, status])
+  @@index([status])
+}
+
+model CallLog {
+  id          Int      @id @default(autoincrement())
+  contactId   Int
+  contact     CampaignContact @relation(fields: [contactId], references: [id])
+  callerId    Int?
+  caller      User?    @relation(fields: [callerId], references: [id])
+  outcome     String // ANSWERED | ANSWERED_HUNG_UP | NO_ANSWER | BUSY | INVALID
+  disposition String? // PROMO_20 | INFO | NONE
+  smsSent     Boolean  @default(false)
+  note        String   @default("")
+  calledAt    DateTime @default(now())
+  period      String? // "YYYY-MM" ของรอบนำเข้า
+
+  @@index([contactId])
+  @@index([callerId])
+  @@index([calledAt])
+  @@index([period])
+}
+
+// ตั้งค่าระบบแจ้งเตือน (ข้อ 12) — เก็บ chat id / เกณฑ์ / เปิด-ปิด เพื่อแก้ได้โดยไม่ deploy ใหม่
+model NotificationSetting {
+  id    Int    @id @default(autoincrement())
+  key   String @unique
+  value String
+}
+
+model DepositEvent {
+  id         Int      @id @default(autoincrement())
+  customerId Int
+  customer   Customer @relation(fields: [customerId], references: [id])
+  amount     Float
+  date       DateTime
+  period     String? // "YYYY-MM" ของรอบนำเข้า (สำหรับเปรียบเทียบรายเดือน)
+
+  @@index([customerId])
+  @@index([date])
+  @@index([period])
+}
+
+model BonusAdjustment {
+  id         Int      @id @default(autoincrement())
+  customerId Int
+  customer   Customer @relation(fields: [customerId], references: [id])
+  amount     Float
+  date       DateTime
+  period     String?
+
+  @@index([customerId])
+  @@index([date])
+  @@index([period])
+}
+
+// ข้อ 10: Audit Log — บันทึกว่าใครทำอะไรเมื่อไหร่ (เก็บชื่อผู้ทำเป็น snapshot เผื่อผู้ใช้ถูกลบ)
+model AuditLog {
+  id        Int      @id @default(autoincrement())
+  actorId   Int? // id ผู้ทำ (null = ระบบ/ไม่ทราบ)
+  actorName String // ชื่อแสดงของผู้ทำ ณ ขณะนั้น
+  action    String // คีย์การกระทำ เช่น user.role, call.delete
+  entity    String // ชนิดข้อมูล เช่น user, role, call, deposit, bonus, customer, import, export
+  entityId  String? // id ของข้อมูลที่ถูกกระทำ
+  summary   String // ข้อความอ่านง่ายภาษาไทย
+  meta      String? // JSON เพิ่มเติม (เช่น ค่าเดิม/ค่าใหม่)
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
+  @@index([actorId])
+  @@index([entity])
+  @@index([action])
+}
+
+// ประวัติการนำเข้าข้อมูลรายเดือน (เก็บไว้ทุกเดือนเพื่อวิเคราะห์เปรียบเทียบ)
+model ImportBatch {
+  id        Int      @id @default(autoincrement())
+  period    String   @unique // "YYYY-MM"
+  label     String
+  fileName  String   @default("")
+  brands    Int      @default(0)
+  customers Int      @default(0)
+  calls     Int      @default(0)
+  deposits  Int      @default(0)
+  bonuses   Int      @default(0)
+  createdAt DateTime @default(now())
+}

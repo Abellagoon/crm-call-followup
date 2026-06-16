@@ -1,0 +1,615 @@
+:root {
+  --bg: #f1f5f9;
+  --panel: #ffffff;
+  --border: #e2e8f0;
+  --text: #0f172a;
+  --muted: #64748b;
+  --primary: #2563eb;
+  --primary-dark: #1d4ed8;
+  --sidebar: #1e3a8a;
+  --sidebar-muted: #c7d2fe;
+  --green: #16a34a;
+  --green-bg: #dcfce7;
+  --yellow: #ca8a04;
+  --yellow-bg: #fef9c3;
+  --red: #dc2626;
+  --red-bg: #fee2e2;
+  --hover: #f1f5f9;
+  --zebra: #f9fafb;
+  --shadow: 0 1px 2px rgba(16, 24, 40, 0.04), 0 1px 3px rgba(16, 24, 40, 0.07);
+  --shadow-lg: 0 8px 24px rgba(16, 24, 40, 0.1);
+}
+
+/* 🌙 Dark mode — สลับด้วยปุ่มในแถบข้าง (เก็บค่าใน localStorage) */
+[data-theme="dark"] {
+  --bg: #0b1220;
+  --panel: #111a2e;
+  --border: #243049;
+  --text: #e6edf7;
+  --muted: #94a3b8;
+  --hover: #1a2740;
+  --zebra: #0e1729;
+  --shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 1px 3px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.45);
+}
+
+/* เปลี่ยนธีมแบบ fade นุ่มๆ */
+body,
+.card,
+.input,
+table,
+th,
+td,
+.btn,
+.btn-primary {
+  transition: background-color 0.25s ease, color 0.25s ease, border-color 0.25s ease;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: "Noto Sans Thai", "Sarabun", -apple-system, BlinkMacSystemFont,
+    "Segoe UI", Roboto, sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+/* ---------- โครงหน้า ---------- */
+.shell {
+  display: flex;
+  min-height: 100vh;
+}
+
+.sidebar {
+  width: 240px;
+  flex-shrink: 0;
+  background: linear-gradient(160deg, #312e81 0%, #1e40af 45%, #2563eb 100%);
+  color: #fff;
+  display: flex;
+  flex-direction: column;
+  padding: 18px 14px;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+}
+
+.sidebar .brand {
+  font-size: 18px;
+  font-weight: 700;
+  padding: 6px 10px 18px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.nav {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  min-height: 0; /* ให้ flex หดได้ */
+  overflow-y: auto; /* เมนูยาวเกินจอ → เลื่อนภายในได้ (ปุ่มล่างคงที่) */
+  overflow-x: hidden;
+  /* scrollbar บางๆ ให้เข้ากับพื้นน้ำเงิน */
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.3) transparent;
+}
+.nav::-webkit-scrollbar {
+  width: 6px;
+}
+.nav::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: 3px;
+}
+
+.nav a {
+  padding: 10px 12px;
+  border-radius: 8px;
+  color: var(--sidebar-muted);
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  transition: background 0.12s, color 0.12s;
+}
+
+.nav a:hover {
+  background: rgba(255, 255, 255, 0.07);
+  color: #fff;
+}
+
+.nav a.active {
+  background: rgba(255, 255, 255, 0.22);
+  color: #fff;
+  font-weight: 600;
+  box-shadow: inset 3px 0 0 #fff;
+}
+
+.nav .section {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #475569;
+  padding: 14px 12px 4px;
+}
+
+/* เมนูแบบกลุ่มพับได้ (accordion) */
+.nav-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.nav .group-head {
+  width: 100%;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 10px 12px;
+  border-radius: 8px;
+  color: var(--sidebar-muted);
+  font-weight: 500;
+  font-family: inherit;
+  font-size: inherit;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  transition: background 0.12s, color 0.12s;
+}
+
+.nav .group-head:hover {
+  background: rgba(255, 255, 255, 0.07);
+  color: #fff;
+}
+
+.nav .group-head.open {
+  color: #fff;
+}
+
+.nav .group-head .group-label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.nav .group-head .chevron {
+  font-size: 11px;
+  opacity: 0.7;
+}
+
+.nav .group-items {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 2px 0 4px 18px;
+  padding-left: 8px;
+  border-left: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.nav .group-items a {
+  padding: 8px 12px;
+  font-size: 13px;
+}
+
+.userbox {
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  margin-top: 8px;
+  padding-top: 12px;
+}
+
+.userbox .name {
+  font-weight: 600;
+  color: #fff;
+}
+
+.userbox .role {
+  font-size: 12px;
+  color: var(--sidebar-muted);
+}
+
+.userbox a {
+  color: var(--sidebar-muted);
+  font-size: 13px;
+}
+
+.userbox a:hover {
+  color: #fff;
+}
+
+.content {
+  flex: 1;
+  padding: 28px 32px;
+  max-width: 100%;
+  overflow-x: auto;
+  transition: background-color 0.25s ease;
+}
+
+/* สีพื้นหลังเนื้อหา (พื้นที่ว่าง) ตามหมวดเมนู: 1-4 ฟ้าอ่อน · 5-6 เขียวอ่อน */
+body[data-zone="blue"] .content {
+  background: #eef4ff;
+}
+body[data-zone="green"] .content {
+  background: #ecfdf3;
+}
+/* โหมดมืด: คงพื้นเข้มเดิม */
+[data-theme="dark"] body[data-zone] .content {
+  background: transparent;
+}
+
+.page-title {
+  font-size: 22px;
+  font-weight: 700;
+  margin: 0 0 4px;
+}
+
+.page-sub {
+  color: var(--muted);
+  margin: 0 0 22px;
+}
+
+/* ---------- การ์ด ---------- */
+.card {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 18px;
+  box-shadow: var(--shadow);
+}
+
+.card + .card {
+  margin-top: 18px;
+}
+
+.card-title {
+  font-weight: 700;
+  font-size: 15px;
+  margin: 0 0 14px;
+}
+
+.grid {
+  display: grid;
+  gap: 16px;
+}
+
+.grid-4 {
+  grid-template-columns: repeat(4, 1fr);
+}
+
+.grid-2 {
+  grid-template-columns: repeat(2, 1fr);
+}
+
+@media (max-width: 900px) {
+  .grid-4 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .grid-2 {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ตัวเลขสรุป */
+.stat {
+  transition: transform 0.16s ease, box-shadow 0.16s ease;
+}
+.stat:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-lg);
+}
+.stat .label {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.stat .value {
+  font-size: 26px;
+  font-weight: 700;
+  margin-top: 4px;
+}
+
+.stat .value.green {
+  color: var(--green);
+}
+
+/* การ์ดสรุปแบบมีไอคอน (แดชบอร์ด) */
+.stat-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.stat-ico {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  flex-shrink: 0;
+}
+.stat-ico.blue { background: #dbeafe; }
+.stat-ico.green { background: var(--green-bg); }
+.stat-ico.amber { background: var(--yellow-bg); }
+.stat-ico.violet { background: #ede9fe; }
+[data-theme="dark"] .stat-ico { filter: brightness(0.5) saturate(1.4); }
+
+/* ---------- ตาราง ---------- */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13.5px;
+}
+
+th {
+  text-align: left;
+  color: var(--muted);
+  font-weight: 600;
+  padding: 10px 12px;
+  border-bottom: 2px solid var(--border);
+  white-space: nowrap;
+  position: sticky;
+  top: 0;
+  background: var(--panel);
+  z-index: 2;
+}
+
+td {
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border);
+  vertical-align: middle;
+}
+
+/* zebra สลับสีแถว */
+tbody tr:nth-child(even) {
+  background: var(--zebra);
+}
+
+tbody tr:hover {
+  background: var(--hover);
+}
+
+tr.total td {
+  font-weight: 700;
+  background: var(--hover);
+  border-top: 2px solid var(--border);
+}
+
+.num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- ปุ่ม ---------- */
+.btn,
+.btn-primary,
+.btn-ghost {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 9px 16px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1px solid var(--border);
+  background: var(--panel);
+  color: var(--text);
+  transition: background 0.12s, border-color 0.12s;
+}
+
+.btn:hover,
+.btn-ghost:hover {
+  background: var(--hover);
+}
+
+.btn-primary {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: #fff;
+}
+
+.btn-primary:hover {
+  background: var(--primary-dark);
+  border-color: var(--primary-dark);
+}
+
+.btn-sm {
+  padding: 6px 12px;
+  font-size: 13px;
+}
+
+/* ---------- ฟอร์ม ---------- */
+.input,
+select.input,
+textarea.input {
+  width: 100%;
+  padding: 9px 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 14px;
+  background: var(--panel);
+  color: var(--text);
+  font-family: inherit;
+}
+
+.input:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+}
+
+label.field {
+  display: block;
+  margin-bottom: 14px;
+}
+
+label.field .lbl {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 6px;
+  font-size: 13.5px;
+}
+
+.toolbar {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  margin-bottom: 16px;
+}
+
+.toolbar .field {
+  margin-bottom: 0;
+}
+
+/* ---------- badge ---------- */
+.badge {
+  display: inline-block;
+  padding: 2px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.badge-green {
+  background: var(--green-bg);
+  color: var(--green);
+}
+
+.badge-yellow {
+  background: var(--yellow-bg);
+  color: var(--yellow);
+}
+
+.badge-red {
+  background: var(--red-bg);
+  color: var(--red);
+}
+
+.badge-gray {
+  background: #e2e8f0;
+  color: #475569;
+}
+
+
+/* ---------- ข้อความแจ้งเตือน ---------- */
+.alert {
+  padding: 10px 14px;
+  border-radius: 8px;
+  margin-bottom: 14px;
+  font-size: 14px;
+}
+
+.alert-error {
+  background: var(--red-bg);
+  color: var(--red);
+  border: 1px solid #fecaca;
+}
+
+.alert-success {
+  background: var(--green-bg);
+  color: var(--green);
+  border: 1px solid #bbf7d0;
+}
+
+.muted {
+  color: var(--muted);
+}
+
+/* ---------- หน้า login ---------- */
+.login-wrap {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--sidebar);
+  padding: 20px;
+}
+
+.login-card {
+  background: var(--panel);
+  border-radius: 14px;
+  padding: 32px;
+  width: 100%;
+  max-width: 380px;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.35);
+}
+
+.login-card h1 {
+  margin: 0 0 4px;
+  font-size: 22px;
+}
+
+.login-card .sub {
+  color: var(--muted);
+  margin: 0 0 22px;
+  font-size: 14px;
+}
+
+.hint {
+  margin-top: 18px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+  font-size: 12.5px;
+  color: var(--muted);
+  line-height: 1.8;
+}
+
+.pill-row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+
+.pill {
+  padding: 6px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  font-size: 13px;
+  font-weight: 600;
+  background: var(--panel);
+}
+
+.pill.active {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: #fff;
+}
+
+/* ---------- Skeleton (โหลด) ---------- */
+.skeleton {
+  background: linear-gradient(90deg, var(--border) 25%, var(--hover) 37%, var(--border) 63%);
+  background-size: 400% 100%;
+  animation: shimmer 1.4s ease infinite;
+  border-radius: 8px;
+}
+@keyframes shimmer {
+  0% { background-position: 100% 0; }
+  100% { background-position: -100% 0; }
+}
+.sk-line { height: 14px; margin: 8px 0; }
+.sk-row { height: 44px; margin: 6px 0; border-radius: 10px; }
+
+/* empty state สวยๆ */
+.empty {
+  text-align: center;
+  padding: 32px 16px;
+  color: var(--muted);
+}
+.empty .ico { font-size: 34px; opacity: 0.7; display: block; margin-bottom: 8px; }
